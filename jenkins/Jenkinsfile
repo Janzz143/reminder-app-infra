@@ -1,0 +1,89 @@
+pipeline { 
+  agent any
+
+  environment {
+    IMAGE_TAG = "yourdockeruser/reminder-app:${env.BUILD_NUMBER}"
+    BACKEND_DIR = "backend"
+    FRONTEND_DIR = "frontend"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Test Backend') {
+      steps {
+        dir(BACKEND_DIR) {
+          sh 'npm install'
+          sh 'npm test'
+        }
+      }
+    }
+
+    stage('Security Scan') {
+      steps {
+        dir(BACKEND_DIR) {
+          // Node.js dependency audit
+          sh 'npm audit --audit-level=high || true'
+        }
+      }
+    }
+
+    stage('Build and Push Docker Images') {
+      when {
+        branch 'main'
+      }
+      steps {
+        script {
+          // Build and push backend and frontend Docker images
+          docker.build("${IMAGE_TAG}-backend", "./${BACKEND_DIR}").push()
+          docker.build("${IMAGE_TAG}-frontend", "./${FRONTEND_DIR}").push()
+        }
+      }
+    }
+
+    stage('Scan Docker Images') {
+      when {
+        branch 'main'
+      }
+      steps {
+        // Trivy vulnerability scan for built images
+        sh "trivy image --severity HIGH,CRITICAL ${IMAGE_TAG}-backend || true"
+        sh "trivy image --severity HIGH,CRITICAL ${IMAGE_TAG}-frontend || true"
+      }
+    }
+
+    stage('Deploy to Staging') {
+      steps {
+        sh './scripts/deploy-staging.sh'
+      }
+    }
+
+    stage('Manual Approval for Prod') {
+      steps {
+        input message: "Deploy to Production?", ok: "Deploy"
+      }
+    }
+
+    stage('Deploy to Production') {
+      steps {
+        sh './scripts/deploy-prod.sh'
+      }
+    }
+  }
+
+  post {
+    failure {
+      echo "Build failed"
+      // Add Slack or email notifications here
+    }
+    success {
+      echo "Build succeeded"
+      // Add Slack or email notifications here
+    }
+  }
+}
+

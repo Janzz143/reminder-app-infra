@@ -1,12 +1,21 @@
+require('dotenv').config();
 const express = require('express');
+const { Pool } = require('pg');
+
 const app = express();
 const port = process.env.PORT || 3000;
 
+// PostgreSQL client pool
+const pool = new Pool();
+
 app.use(express.json());
 
-app.post('/reminder', (req, res) => {
-  const { date } = req.body;
-  if (!date) return res.status(400).json({ message: 'Date is required' });
+app.post('/reminder', async (req, res) => {
+  const { name, date } = req.body;
+
+  if (!date || !name) {
+    return res.status(400).json({ message: 'Event name and date are required' });
+  }
 
   const reminderDate = new Date(date);
   const now = new Date();
@@ -15,13 +24,26 @@ app.post('/reminder', (req, res) => {
     return res.status(400).json({ message: 'Date must be in the future' });
   }
 
-  // Simulated event trigger
-  const msUntilReminder = reminderDate - now;
-  setTimeout(() => {
-    console.log(`Reminder: Event scheduled for ${reminderDate.toISOString()} triggered.`);
-  }, msUntilReminder);
+  try {
+    // Save event to PostgreSQL
+    await pool.query(
+      'INSERT INTO reminders (name, date) VALUES ($1, $2)',
+      [name, reminderDate]
+    );
 
-  res.status(200).json({ message: `Reminder set for ${reminderDate.toISOString()}` });
+    // Simulate reminder trigger
+    const msUntilReminder = reminderDate - now;
+    setTimeout(() => {
+      console.log(`⏰ Reminder triggered for event "${name}" at ${reminderDate.toISOString()}`);
+    }, msUntilReminder);
+
+    res.status(200).json({ message: `Reminder set for "${name}" on ${reminderDate.toISOString()}` });
+  } catch (err) {
+    console.error('Database error:', err);
+    res.status(500).json({ message: 'Failed to save reminder' });
+  }
 });
 
-app.listen(port, () => console.log(`Server running on port ${port}`));
+app.listen(port, () => {
+  console.log(`✅ Server running on port ${port}`);
+});

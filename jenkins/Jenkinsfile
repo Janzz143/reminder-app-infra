@@ -3,14 +3,14 @@ pipeline {
 
   environment {
     IMAGE_TAG = "yourdockeruser/reminder-app:${env.BUILD_NUMBER}"
-    BACKEND_DIR = "backend"
-    FRONTEND_DIR = "frontend"
+    BACKEND_DIR = "app/backend"
+    FRONTEND_DIR = "app/frontend"
   }
 
   stages {
     stage('Checkout') {
       steps {
-        checkout scm
+        checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Janzz143/reminder-app-infra']])
       }
     }
 
@@ -58,7 +58,8 @@ pipeline {
 
     stage('Deploy to Staging') {
       steps {
-        sh './scripts/deploy-staging.sh'
+        sh '''chmod +x scripts/deploy.sh
+             ./scripts/deploy.sh'''
       }
     }
 

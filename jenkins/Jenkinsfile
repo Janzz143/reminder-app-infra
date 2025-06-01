@@ -58,7 +58,7 @@ pipeline {
 
     stage('Deploy to Staging') {
       steps {
-        sh './scripts/deploy-staging.sh'
+        sh './scripts/deploy.sh'
       }
     }
 

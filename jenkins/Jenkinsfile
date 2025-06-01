@@ -59,10 +59,7 @@ pipeline {
     stage('Deploy to Staging') {
       steps {
         sh '''chmod +x scripts/deploy.sh
-            git add scripts/deploy.sh
-            git commit -m "Make deploy.sh executable"
-            git push
-            ./scripts/deploy.sh'''
+             ./scripts/deploy.sh'''
       }
     }
 

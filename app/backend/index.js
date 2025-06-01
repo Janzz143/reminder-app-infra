@@ -27,7 +27,7 @@ app.post('/reminder', async (req, res) => {
   try {
     // Save event to PostgreSQL
     await pool.query(
-      'INSERT INTO reminders (name, date) VALUES ($1, $2)',
+      'INSERT INTO events (name, date) VALUES ($1, $2)',
       [name, reminderDate]
     );
 

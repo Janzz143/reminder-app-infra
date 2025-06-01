@@ -1,6 +1,6 @@
 services:
   backend:
-    build: ./backend
+    build: ./app/backend
     container_name: reminder-backend
     ports:
       - "3000:3000"

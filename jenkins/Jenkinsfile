@@ -3,8 +3,8 @@ pipeline {
 
   environment {
     IMAGE_TAG = "yourdockeruser/reminder-app:${env.BUILD_NUMBER}"
-    BACKEND_DIR = "backend"
-    FRONTEND_DIR = "frontend"
+    BACKEND_DIR = "app/backend"
+    FRONTEND_DIR = "app/frontend"
   }
 
   stages {
